@@ -7,6 +7,8 @@ from rest_framework import viewsets, status
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+import jieba
+import jieba.analyse
 
 from core.models import TrainingFragment, RequestFragment
 from api.serializers import (
@@ -55,6 +57,7 @@ class TrainingFragmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            collect_for_return = []
             if len(fragment_list) > 30:
                 return Response('Max fragments: %s' % 30, status=status.HTTP_400_BAD_REQUEST)
             # [FIXME] Can not do bulk_create due to taggit. Need a way to get over it.
@@ -66,6 +69,7 @@ class TrainingFragmentViewSet(viewsets.ModelViewSet):
                 for tag in fragment['tags']:
                     obj.tags.add(tag)
                 obj.save()
+                collect_for_return.append(obj.id)
         except KeyError:
             return Response(
                 'Fragment list error. Some keys are missing.',
@@ -74,6 +78,15 @@ class TrainingFragmentViewSet(viewsets.ModelViewSet):
             return Response(
                 'Error saving fragments.',
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # prepare returning data
+        try:
+            return_fragments = TrainingFragment.objects.filter(id__in=collect_for_return)
+            serializer = self.get_serializer(return_fragments, many=True)
+            ret = serializer.data
+        except TrainingFragment.DoesNotExist:
+            # [ToDo] logging
+            pass
 
         return Response(ret)
 
@@ -141,13 +154,10 @@ class RequestFragmentViewSet(viewsets.ModelViewSet):
                         label = fragment['label'],
                         text = fragment['text'],
                         sender = request.user)
-                # [ToDo] compute tags here
-                # tags = compute_tags(fragment['text'])
-                '''
-                tags = []
+                # compute tags here
+                tags = jieba.analyse.extract_tags(obj.text, topK=3, withWeight=False)
                 for tag in tags:
                     obj.tags.add(tag)
-                '''
                 obj.save()
                 collect_for_return.append(obj.id)
         except KeyError:
@@ -159,13 +169,13 @@ class RequestFragmentViewSet(viewsets.ModelViewSet):
                 'Error saving fragments.',
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        # prepare returning data
         try:
             return_fragments = RequestFragment.objects.filter(id__in=collect_for_return)
-            # serialze return_fragments
-            # serializer = RequestFragmentSerializer.....
-            # ret = serializer.data
+            serializer = self.get_serializer(return_fragments, many=True)
+            ret = serializer.data
         except RequestFragment.DoesNotExist:
+            # [ToDo] logging
             pass
 
         return Response(ret)
-

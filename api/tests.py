@@ -68,6 +68,7 @@ class TrainingFragmentAPITest(APITestCase):
             },
             format='json',
         )
+        self.assertEqual(response.status_code, 200)
         # check by model
         self.assertEqual(TrainingFragment.objects.count(), 2)
 
@@ -104,12 +105,13 @@ class RequestFragmentAPITest(APITestCase):
                 "fragments": [
                     {
                         "label": "POST-1",
-                        "text": "POST-1-Text",
+                        "text": "SIMPLE is a strategy-based game for programming learning. Write down your strategy in defined programming language, control your workers then compete with your friends. The programming languages supported by SIMPLE are Python and Java.",
                     }
                 ]
             },
             format='json',
         )
+        self.assertEqual(response.status_code, 200)
         # check by model
         self.assertEqual(RequestFragment.objects.count(), 1)
 
