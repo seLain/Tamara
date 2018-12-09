@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import TrainingFragment
+from core.models import TrainingFragment, RequestFragment
 
 
 class TaggableManagerField(serializers.Field):
@@ -19,9 +19,19 @@ class UserField(serializers.Field):
 
 class TrainingFragmentSerializer(serializers.ModelSerializer):
 
-    ground_tags = TaggableManagerField()
+    tags = TaggableManagerField()
     contributor = UserField()
 
     class Meta:
         model = TrainingFragment
-        fields = ('id', 'label', 'text', 'ground_tags', 'contributor')
+        fields = ('id', 'label', 'text', 'tags', 'contributor')
+
+
+class RequestFragmentSerializer(serializers.ModelSerializer):
+
+    tags = TaggableManagerField()
+    sender = UserField()
+
+    class Meta:
+        model = RequestFragment
+        fields = ('id', 'label', 'text', 'tags', 'sender')
