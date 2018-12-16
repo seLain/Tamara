@@ -89,21 +89,18 @@ class TrainingFragmentViewSet(viewsets.ModelViewSet):
 
         return Response(ret)
 
-    '''
-    request.data =
-    {
-        "fragments": [
-            {
-                "id": 1
-            }
-        ]
-    }
-    '''
-    '''
     @transaction.atomic
-    def destroy(self, request, *args, **kwargs):
-        pass
-    '''
+    def destroy(self, request, pk, *args, **kwargs):
+        
+        if request.user.is_anonymous:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            TrainingFragment.objects.filter(id=pk, contributor=request.user).delete()
+        except TrainingFragment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class RequestFragmentViewSet(viewsets.ModelViewSet):

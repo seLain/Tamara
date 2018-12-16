@@ -12,12 +12,6 @@ class TrainingFragmentAPITest(APITestCase):
 
     fixtures = ['admin.json']
 
-    @skip
-    def test_get_fragments(self):
-        # self.client.login
-        # get and check
-        pass
-
     def test_post_one_fragment(self):
         # self.client.login
         logged_in = self.client.login(
@@ -72,15 +66,38 @@ class TrainingFragmentAPITest(APITestCase):
         # check by model
         self.assertEqual(TrainingFragment.objects.count(), 2)
 
-    @skip
-    def test_delete_fragments(self):
+    def test_get_fragments(self):
+        # create fragments
+        self.test_post_fragments()
         # self.client.login
-        # get framents
-        # delete 1 fragment
-        # check by model
-        # delete multiple fragments
-        # check by model
-        pass
+        logged_in = self.client.login(
+            username='tamara-admin', password='admin-tamara')
+        # add token to header
+        token = Token.objects.get(user__username='tamara-admin')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        # send 1 fragment
+        response = self.client.get(path='/api/trainings/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['count'], 2)
+
+    def test_delete_fragments(self):
+        # create fragments
+        self.test_post_fragments()
+        # self.client.login
+        logged_in = self.client.login(
+            username='tamara-admin', password='admin-tamara')
+        # add token to header
+        token = Token.objects.get(user__username='tamara-admin')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        # send 1 fragment
+        response = self.client.get(path='/api/trainings/')
+        results = response.json()['results']
+        # delete one of them
+        self.assertEqual(TrainingFragment.objects.count(), 2)
+        response = self.client.delete(path='/api/trainings/%s/' % results[0]['id'])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(TrainingFragment.objects.count(), 1)
+
 
 
 class RequestFragmentAPITest(APITestCase):
