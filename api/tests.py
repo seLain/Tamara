@@ -82,10 +82,6 @@ class TrainingFragmentAPITest(APITestCase):
         # check by model
         pass
 
-    @skip
-    def test_update_fragments(self):
-        pass
-
 
 class RequestFragmentAPITest(APITestCase):
 
@@ -115,11 +111,30 @@ class RequestFragmentAPITest(APITestCase):
         # check by model
         self.assertEqual(RequestFragment.objects.count(), 1)
 
-    @skip
     def test_post_fragments(self):
         # self.client.login
+        logged_in = self.client.login(
+            username='tamara-admin', password='admin-tamara')
+        # add token to header
+        token = Token.objects.get(user__username='tamara-admin')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
         # send 1 fragment
-        # check response
-        # send multiple fragments
-        # check response
-        pass
+        response = self.client.post(
+            path='/api/requests/',
+            data={
+                "fragments": [
+                    {
+                        "label": "POST-1",
+                        "text": "SIMPLE is a strategy-based game for programming learning. Write down your strategy in defined programming language, control your workers then compete with your friends. The programming languages supported by SIMPLE are Python and Java.",
+                    },
+                    {
+                        "label": "POST-2",
+                        "text": "SIMPLE motivates students to practice programming skills via gaming. Players of SIMPLE write their strategies to control entities in the game. The specified actions of entities in strategies will gain or consume some scores.",
+                    }
+                ]
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        # check by model
+        self.assertEqual(RequestFragment.objects.count(), 2)
