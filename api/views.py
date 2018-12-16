@@ -7,13 +7,12 @@ from rest_framework import viewsets, status
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-import jieba
-import jieba.analyse
 
 from core.models import TrainingFragment, RequestFragment
 from api.serializers import (
     TrainingFragmentSerializer, RequestFragmentSerializer
 )
+from core.tfidf import tfidf
 
 
 class TrainingFragmentViewSet(viewsets.ModelViewSet):
@@ -155,7 +154,7 @@ class RequestFragmentViewSet(viewsets.ModelViewSet):
                         text = fragment['text'],
                         sender = request.user)
                 # compute tags here
-                tags = jieba.analyse.extract_tags(obj.text, topK=3, withWeight=False)
+                tags = tfidf.extract_tags(obj.text, topK=3, withWeight=False)
                 for tag in tags:
                     obj.tags.add(tag)
                 obj.save()
